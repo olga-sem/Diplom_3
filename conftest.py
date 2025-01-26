@@ -1,8 +1,7 @@
 import pytest
 from selenium import webdriver
 import urls
-import string
-import random
+import helpers
 import requests
 
 
@@ -20,24 +19,9 @@ def driver(request):
 
     driver.quit()
 
-def create_new_user_and_return_auth_data():
-    def generate_random_string(length=10):
-        letters = string.ascii_lowercase
-        random_string = ''.join(random.choice(letters) for i in range(length))
-        return random_string
-    email = generate_random_string() + '@gmail.com'
-    password = generate_random_string()
-    name = generate_random_string()
-    payload = {
-        "email": email,
-        "password": password,
-        "name": name
-    }
-    return payload
-
 @pytest.fixture(scope='function')
 def create_and_delete_user():
-    payload = create_new_user_and_return_auth_data()
+    payload = helpers.create_new_user_and_return_auth_data()
     response = requests.post(f'{urls.BASE_URL}{urls.NEW_USER_URL}', data=payload)
     response_data = response.json()
     yield payload, response_data
@@ -53,7 +37,6 @@ def create_user_order_and_delete(create_and_delete_user):
                              headers=headers,
                              json=ingredients)
     yield access_token, response
-    requests.delete(f'{urls.BASE_URL}{urls.DELETE_USER_URL}', headers=headers)
 
 @pytest.fixture
 def use_token(driver, create_and_delete_user):
